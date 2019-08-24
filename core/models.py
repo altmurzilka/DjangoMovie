@@ -1,6 +1,9 @@
+from django.conf import settings
 from django.db import models
+from django.db.models.aggregates import (
+    Sum
+)
 
-# Create your models here.
 
 class PersonManager(models.Manager):
     def all_with_prefetch_movies(self):
@@ -9,6 +12,7 @@ class PersonManager(models.Manager):
             'directed',
             'writing_credits',
             'role_set__movie')
+
 
 class Person(models.Model):
     first_name = models.CharField(
@@ -36,7 +40,8 @@ class Person(models.Model):
                 self.last_name,
                 self.first_name,
                 self.born)
-    
+
+
 class MovieManager(models.Manager):
 
     def all_with_related_persons(self):
@@ -46,6 +51,23 @@ class MovieManager(models.Manager):
         qs = qs.prefetch_related(
             'writers', 'actors')
         return qs
+
+    def all_with_related_persons_and_score(self):
+        qs = self.all_with_related_persons()
+        qs = qs.annotate(score=Sum('vote__value'))
+        return qs
+
+    def top_movies(self):
+        qs = self.get_queryset()
+        qs = qs.annotate(
+                vote_sum=Sum(
+                    'vote__value'))
+        qs = qs.exclude(
+            vote_sum=None)
+        qs = qs.order_by(
+            '-vote_sum')
+        return qs
+
 
 class Movie(models.Model):
     NOT_RATED = 0
@@ -93,10 +115,11 @@ class Movie(models.Model):
 
     class Meta:
         ordering = ('-year', 'title')
-    
+
     def __str__(self):
         return '{} ({})'.format(
             self.title, self.year)
+
 
 class Role(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.DO_NOTHING)
@@ -110,3 +133,29 @@ class Role(models.Model):
         unique_together = ('movie',
                            'person',
                            'name')
+
+class Vote(models.Model):
+    UP = 1
+    DOWN = -1
+    VALUE_CHOICES = (
+        (UP, "👍",),
+        (DOWN, "👎",),
+    )
+
+    value = models.SmallIntegerField(
+        choices=VALUE_CHOICES,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    movie = models.ForeignKey(
+        Movie,
+        on_delete=models.CASCADE,
+    )
+    voted_on = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        unique_together = ('user', 'movie')
