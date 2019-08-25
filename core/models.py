@@ -80,15 +80,14 @@ class MovieManager(models.Manager):
         qs = qs.annotate(score=Sum('vote__value'))
         return qs
 
-    def top_movies(self):
+    def top_movies(self, limit=10):
         qs = self.get_queryset()
         qs = qs.annotate(
-                vote_sum=Sum(
-                    'vote__value'))
+            vote_sum=Sum('vote__value'))
         qs = qs.exclude(
             vote_sum=None)
-        qs = qs.order_by(
-            '-vote_sum')
+        qs = qs.order_by('-vote_sum')
+        qs = qs[:limit]
         return qs
 
 
