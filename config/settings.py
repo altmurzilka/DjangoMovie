@@ -134,3 +134,35 @@ LOGIN_REDIRECT_URL = 'user:login'
 
 MEDIA_URL = '/uploaded/'
 MEDIA_ROOT = os.path.join(BASE_DIR, '../media_root')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'default-locmemcache',
+        'TIMEOUT': 5,
+    }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': [],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+        # 'django.db.backends': {
+        #     'handlers': ['console'],
+        #     'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+        # },
+    },
+}
+
+
+CSRF_USE_SESSIONS = True

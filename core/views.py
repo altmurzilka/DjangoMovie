@@ -1,9 +1,16 @@
+import logging
+
 from django.contrib.auth.mixins import (
     LoginRequiredMixin)
 from django.core.exceptions import (
     PermissionDenied)
+from django.core.cache import cache
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.views.decorators.cache import (
+    cache_page)
+from django.views.decorators.vary import (
+    vary_on_cookie)
 from django.views.generic import (
     ListView, DetailView, UpdateView,
     CreateView
